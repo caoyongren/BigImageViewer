@@ -87,6 +87,7 @@ public class BigImageView extends FrameLayout implements ImageLoader.Callback {
     private ImageSaveCallback mImageSaveCallback;
     private ImageLoader.Callback mUserCallback;
     private File mCurrentImageFile;
+    private Uri mUri;
     private Uri mThumbnail;
 
     private ProgressIndicator mProgressIndicator;
@@ -159,13 +160,28 @@ public class BigImageView extends FrameLayout implements ImageLoader.Callback {
     }
 
     @Override
-    public void setOnClickListener(OnClickListener listener) {
+    public void setOnClickListener(final OnClickListener listener) {
         mImageView.setOnClickListener(listener);
+
+        if (mFailureImageView != null) {
+            mFailureImageView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(final View v) {
+                    // Retry loading when failure image is clicked
+                    showImage(mThumbnail, mUri);
+                    listener.onClick(v);
+                }
+            });
+        }
     }
 
     @Override
     public void setOnLongClickListener(OnLongClickListener listener) {
         mImageView.setOnLongClickListener(listener);
+
+        if (mFailureImageView != null) {
+            mFailureImageView.setOnLongClickListener(listener);
+        }
     }
 
     public void setFailureImageInitScaleType(ImageView.ScaleType scaleType) {
@@ -281,19 +297,12 @@ public class BigImageView extends FrameLayout implements ImageLoader.Callback {
     }
 
     public void showImage(final Uri thumbnail, final Uri uri) {
+        mUri = uri;
         mThumbnail = thumbnail;
         mImageLoader.loadImage(uri, mInternalCallback);
 
         if (mFailureImageView != null) {
             mFailureImageView.setVisibility(GONE);
-
-            mFailureImageView.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(final View v) {
-                    // Retry loading when failure image is clicked
-                    showImage(thumbnail, uri);
-                }
-            });
         }
     }
 
